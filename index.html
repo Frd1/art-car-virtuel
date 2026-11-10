@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#111418" />
+    <link rel="icon" href="data:," />
+    <title>Art Car Virtuel</title>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Art Car Virtuel</h1>
+      <p class="sub">Étape 1 : scanner et vectoriser un dessin</p>
+    </header>
+
+    <main>
+      <section id="s-photo" class="card">
+        <h2>1. Photo du dessin</h2>
+        <div class="row">
+          <label class="btn primary">Prendre une photo
+            <input id="in-camera" type="file" accept="image/*" capture="environment" hidden />
+          </label>
+          <label class="btn">Choisir un fichier
+            <input id="in-file" type="file" accept="image/*" hidden />
+          </label>
+        </div>
+        <button id="btn-demo" class="link" type="button">Passer directement à l'étape 2 avec un dessin de test</button>
+      </section>
+
+      <section id="s-crop" class="card" hidden>
+        <h2>2. Cadrer le dessin</h2>
+        <p class="hint">Déplace les 4 points sur les coins de la feuille. Le dessin sera redressé.</p>
+        <div class="stage"><canvas id="cv-crop"></canvas></div>
+        <button id="btn-warp" class="btn primary">Redresser</button>
+      </section>
+
+      <section id="s-trace" class="card" hidden>
+        <h2>3. Vectoriser</h2>
+        <div class="stage checker"><canvas id="cv-flat"></canvas></div>
+
+        <div class="seg" role="group" aria-label="Mode">
+          <button id="m-noir" class="on" type="button">Trait noir</button>
+          <button id="m-couleurs" type="button">Couleurs</button>
+        </div>
+
+        <label class="ctl" id="c-threshold">Seuil du trait
+          <input id="r-threshold" type="range" min="0" max="100" value="50" />
+        </label>
+        <label class="ctl" id="c-colors" hidden>Nombre de couleurs : <b id="v-colors">6</b>
+          <input id="r-colors" type="range" min="2" max="12" value="6" />
+        </label>
+        <label class="ctl" id="c-bg" hidden>Tolérance du fond
+          <input id="r-bg" type="range" min="5" max="80" value="30" />
+        </label>
+        <label class="ctl">Détail
+          <input id="r-detail" type="range" min="0" max="100" value="50" />
+        </label>
+
+        <button id="btn-trace" class="btn primary">Vectoriser</button>
+        <p id="status" class="hint"></p>
+      </section>
+
+      <section id="s-result" class="card" hidden>
+        <h2>4. Résultat</h2>
+        <div class="stage checker"><div id="svg-out"></div></div>
+        <div class="row">
+          <button id="btn-svg" class="btn">Télécharger SVG</button>
+          <button id="btn-png" class="btn">Télécharger PNG</button>
+        </div>
+        <button id="btn-to-overlay" class="btn primary wide">Poser sur un véhicule</button>
+      </section>
+
+      <section id="s-overlay" class="card" hidden>
+        <h2>5. Poser sur un véhicule</h2>
+        <div class="row">
+          <label class="btn primary">Photo du véhicule
+            <input id="ov-photo" type="file" accept="image/*" capture="environment" hidden />
+          </label>
+          <label class="btn">Galerie
+            <input id="ov-gallery" type="file" accept="image/*" hidden />
+          </label>
+          <button id="ov-cam" class="btn" type="button">Caméra en direct</button>
+        </div>
+
+        <div id="ov-stage" class="ov-stage">
+          <img id="ov-bg-img" alt="" hidden />
+          <video id="ov-bg-video" playsinline muted hidden></video>
+          <p id="ov-placeholder" class="ov-placeholder">Choisis une photo du véhicule</p>
+          <canvas id="ov-art"></canvas>
+          <div class="handle" data-i="0"></div>
+          <div class="handle" data-i="1"></div>
+          <div class="handle" data-i="2"></div>
+          <div class="handle" data-i="3"></div>
+        </div>
+        <p class="hint">Un doigt : déplacer. Deux doigts : taille et rotation. Les 4 points règlent la perspective.</p>
+
+        <label class="ctl">Opacité : <b id="ov-op-v">100</b> %
+          <input id="ov-opacity" type="range" min="10" max="100" value="100" />
+        </label>
+        <label class="ctl">Fusion
+          <select id="ov-blend">
+            <option value="normal">Normal</option>
+            <option value="multiply">Multiplier (voir la carrosserie à travers)</option>
+            <option value="soft-light">Lumière douce</option>
+            <option value="overlay">Incrustation</option>
+          </select>
+        </label>
+        <div class="row">
+          <button id="ov-flip" class="btn" type="button">Miroir</button>
+          <button id="ov-handles" class="btn" type="button">Masquer les points</button>
+          <button id="ov-reset" class="btn" type="button">Recentrer</button>
+        </div>
+        <div class="row">
+          <label class="btn">Importer un dessin (SVG ou PNG)
+            <input id="ov-import" type="file" accept=".svg,image/svg+xml,image/png,image/webp,image/jpeg" hidden />
+          </label>
+          <button id="ov-demo" class="btn" type="button">Dessin de test</button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

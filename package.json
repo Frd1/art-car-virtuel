@@ -1,0 +1,18 @@
+{
+  "name": "art-car-virtuel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "test": "node test/pipeline.test.mjs && node test/overlay.test.mjs"
+  },
+  "dependencies": {
+    "imagetracerjs": "^1.2.6"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}
