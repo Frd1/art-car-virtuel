@@ -1,6 +1,11 @@
 import './style.css';
 import { warpQuad, prepare, vectorize } from './pipeline.js';
 import { initOverlay, DEMO_SVG } from './overlay.js';
+import { decodeImage, showError, clearError } from './image-utils.js';
+
+// Toute erreur inattendue s'affiche dans le bandeau rouge en haut de la page.
+window.addEventListener('error', (e) => showError('Erreur : ' + e.message));
+window.addEventListener('unhandledrejection', (e) => showError('Erreur : ' + (e.reason?.message || e.reason)));
 
 const $ = (id) => document.getElementById(id);
 
@@ -19,28 +24,35 @@ const MAX_PHOTO = 1600; // réduction de la photo pour rester fluide sur un vieu
 
 async function loadFile(file) {
   if (!file) return;
-  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  const k = Math.min(1, MAX_PHOTO / Math.max(bmp.width, bmp.height));
-  const w = Math.round(bmp.width * k);
-  const h = Math.round(bmp.height * k);
-  const c = document.createElement('canvas');
-  c.width = w;
-  c.height = h;
-  const ctx = c.getContext('2d', { willReadFrequently: true });
-  ctx.drawImage(bmp, 0, 0, w, h);
-  state.img = ctx.getImageData(0, 0, w, h);
-  state.photoCanvas = c;
-  const m = 0.1;
-  state.quad = [[w * m, h * m], [w * (1 - m), h * m], [w * (1 - m), h * (1 - m)], [w * m, h * (1 - m)]];
-  $('s-crop').hidden = false;
-  $('s-trace').hidden = true;
-  $('s-result').hidden = true;
-  drawCrop();
-  $('s-crop').scrollIntoView({ behavior: 'smooth' });
+  clearError();
+  try {
+    const c = await decodeImage(file, MAX_PHOTO);
+    const w = c.width;
+    const h = c.height;
+    state.img = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h);
+    state.photoCanvas = c;
+    const m = 0.1;
+    state.quad = [[w * m, h * m], [w * (1 - m), h * m], [w * (1 - m), h * (1 - m)], [w * m, h * (1 - m)]];
+    $('s-crop').hidden = false;
+    $('s-trace').hidden = true;
+    $('s-result').hidden = true;
+    drawCrop();
+    $('s-crop').scrollIntoView({ behavior: 'smooth' });
+  } catch (err) {
+    showError("Impossible de lire cette image : " + err.message);
+  }
 }
 
-$('in-camera').addEventListener('change', (e) => loadFile(e.target.files[0]));
-$('in-file').addEventListener('change', (e) => loadFile(e.target.files[0]));
+// On remet le champ à zéro pour que rechoisir la même image relance bien le traitement.
+function bindFileInput(id, handler) {
+  $(id).addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    handler(f);
+  });
+}
+bindFileInput('in-camera', loadFile);
+bindFileInput('in-file', loadFile);
 
 // ---------- Cadrage 4 coins ----------
 

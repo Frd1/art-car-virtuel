@@ -1,6 +1,7 @@
 import {
   cssMatrix, translateQuad, pinchQuad, scaleQuadAbout, rotateQuadAbout, centroid, initialQuad,
 } from './overlay-math.js';
+import { decodeImage, showError } from './image-utils.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -56,13 +57,7 @@ export async function rasterizeSvg(svgText, longSide = 1000) {
 }
 
 async function rasterizeImageFile(file, longSide = 1000) {
-  const bmp = await createImageBitmap(file);
-  const k = Math.min(1, longSide / Math.max(bmp.width, bmp.height));
-  const c = document.createElement('canvas');
-  c.width = Math.round(bmp.width * k);
-  c.height = Math.round(bmp.height * k);
-  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
-  return c;
+  return decodeImage(file, longSide);
 }
 
 export function initOverlay() {
@@ -134,18 +129,17 @@ export function initOverlay() {
 
   async function setBackgroundFile(file) {
     if (!file) return;
-    stopCamera();
-    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
-    const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
-    const c = document.createElement('canvas');
-    c.width = Math.round(bmp.width * k);
-    c.height = Math.round(bmp.height * k);
-    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
-    bgImg.src = c.toDataURL('image/jpeg', 0.9);
-    bgImg.hidden = false;
-    placeholder.hidden = true;
-    stage.style.aspectRatio = `${c.width} / ${c.height}`;
-    requestAnimationFrame(resetQuad);
+    try {
+      const c = await decodeImage(file, 1600);
+      stopCamera();
+      bgImg.src = c.toDataURL('image/jpeg', 0.9);
+      bgImg.hidden = false;
+      placeholder.hidden = true;
+      stage.style.aspectRatio = `${c.width} / ${c.height}`;
+      requestAnimationFrame(resetQuad);
+    } catch (err) {
+      showError('Impossible de lire cette photo : ' + err.message);
+    }
   }
 
   async function startCamera() {
@@ -171,20 +165,26 @@ export function initOverlay() {
     }
   }
 
-  $('ov-photo').addEventListener('change', (e) => setBackgroundFile(e.target.files[0]));
-  $('ov-gallery').addEventListener('change', (e) => setBackgroundFile(e.target.files[0]));
+  // champ remis à zéro après lecture : rechoisir la même image relance bien le traitement
+  const onFile = (id, handler) =>
+    $(id).addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      e.target.value = '';
+      handler(f);
+    });
+  onFile('ov-photo', setBackgroundFile);
+  onFile('ov-gallery', setBackgroundFile);
   $('ov-cam').addEventListener('click', startCamera);
 
   // ----- Import du dessin -----
 
-  $('ov-import').addEventListener('change', async (e) => {
-    const f = e.target.files[0];
+  onFile('ov-import', async (f) => {
     if (!f) return;
     try {
       const isSvg = f.type === 'image/svg+xml' || /\.svg$/i.test(f.name);
       setDrawing(isSvg ? await rasterizeSvg(await f.text()) : await rasterizeImageFile(f));
     } catch (err) {
-      alert(err.message);
+      showError('Import impossible : ' + err.message);
     }
   });
   $('ov-demo').addEventListener('click', async () => setDrawing(await rasterizeSvg(DEMO_SVG)));

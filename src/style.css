@@ -48,3 +48,5 @@ select { width: 100%; margin-top: 6px; padding: 10px; border-radius: 8px; backgr
 .handle { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: var(--acc); border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.5); touch-action: none; z-index: 5; }
 .handle::before { content: ''; position: absolute; inset: -14px; }
 .ov-stage.nohandles .handle { display: none; }
+
+.err { background: #5a1f1f; border: 1px solid #a33; color: #ffd9d9; border-radius: 10px; padding: 12px 14px; margin: 8px 0; font-size: 0.95rem; }
